@@ -1,65 +1,45 @@
 package main
 
 import (
-	"fmt"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
+	"errors"
+	"fmt"
+	"io"
 )
 
 func main() {
 	input := "somelongkeysomelongkeysomelongkey"
 	key := []byte("1111111111111111")
-	if len(input) <= 16 {
-		src := []byte(input)
-		src = append(src, make([]byte, 16 - len(input))...)
-		dst := encrypt(key, src)
-		fmt.Printf("input: %s\n", input)
-		fmt.Printf("encrypted: %s\n", string(dst))	
-		dst = decrypt(key, []byte(dst))
-		fmt.Printf("decrypted: %s\n", string(dst))
-	} else {
-		loopCont := (len(input) / 16) + 1
-		leftOver:= len(input) % 16
-		var encryptedResult = []byte{}
-		for v := 0; v < loopCont; v++ {
-			src := []byte(input[(v * 16):])
-			fmt.Printf("src loop: %s\n", string(src))
-			encryptedResult = append(encryptedResult, []byte(encrypt(key, src))...)
-		}
-		leftOverSrc := []byte(input[len(input) - leftOver:])
-		fmt.Printf("left over src: %s\n", string(leftOverSrc))
-		encryptedResult = append(encryptedResult, []byte(encrypt(key, leftOverSrc))...)
-		fmt.Printf("input: %s\n", input)
-		fmt.Printf("encrypted: %s\n", string(encryptedResult))
-
-		loopCont = len(encryptedResult) / 16
-		leftOver = len(encryptedResult) % 16
-		var decryptedResult = []byte{}
-		for v := 1; v < loopCont; v++ {
-			src := encryptedResult[:(16*loopCont)]
-			decryptedResult = append(decryptedResult, []byte(decrypt(key, src))...)
-		}
-		leftOverSrc = make([]byte, leftOver + (16 - leftOver))
-		decryptedResult = append(decryptedResult, []byte(decrypt(key, leftOverSrc))...)
-		fmt.Printf("decrypted: %s\n", string(decryptedResult))
-	}
+	encryptedText := encrypt(key, []byte(input))
+	fmt.Printf("input: %s\n encrypted: %s\n", input, encryptedText)
+	decryptedText := decrypt(key, []byte(encryptedText))
+	fmt.Printf("input: %s\n decrypted: %s\n", encryptedText, decryptedText)
 }
 
 func encrypt(key, src []byte) string {
-	dst := make([]byte, len(src))
-	block := must(aes.NewCipher(key))
-	block.Encrypt(dst, src)
-	return string(dst)
+	c := must(aes.NewCipher(key))
+	gcm := must(cipher.NewGCM(c))
+	nonce := make([]byte, gcm.NonceSize())
+    must(io.ReadFull(rand.Reader, nonce))
+	return string(gcm.Seal(nonce, nonce, src, nil))
 }
 
 func decrypt(key, src []byte) string {
-	dst := make([]byte, len(src))
-	block := must(aes.NewCipher(key))
-	block.Decrypt(dst, []byte(src))
-	return string(dst)
+    c := must(aes.NewCipher(key))
+
+    gcm := must(cipher.NewGCM(c))
+    nonceSize := gcm.NonceSize()
+    if len(src) < nonceSize {
+        panic(errors.New("ciphertext too short"))
+    }
+
+    nonce, ciphertext := src[:nonceSize], src[nonceSize:]
+    return string(must(gcm.Open(nil, nonce, ciphertext, nil)))
 }
 
-func must(b cipher.Block, err error) (cipher.Block) {
+func must[T any](b T, err error) (T) {
 	if err != nil {
 		panic(err)
 	}
