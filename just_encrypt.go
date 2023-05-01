@@ -1,4 +1,4 @@
-package main
+package just_encrypt
 
 import (
 	"crypto/aes"
