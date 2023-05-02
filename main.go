@@ -1,22 +1,22 @@
-package just_encrypt
+package zypher
 
 import (
-	"fmt"
+	"flag"
+	"os"
+
+	"github.com/mitchellh/cli"
+	"github.com/vtno/zypher/cmd"
 )
 
 func main() {
-	input := "somelongkeysomelongkeysomelongkey"
-	key := "1111111111111111"
-	ci := NewCipher(key)
-	encryptedText := must(ci.Encrypt([]byte(input)))
-	fmt.Printf("input: %s\n encrypted: %s\n", input, encryptedText)
-	decryptedText := must(ci.Decrypt([]byte(encryptedText)))
-	fmt.Printf("input: %s\n decrypted: %s\n", encryptedText, decryptedText)
-}
+	c := cli.NewCLI("zypher", "0.0.1")
+	// TODO: read "key" from file > env > flag
+	key := flag.String("key", "", "key to encrypt/decrypt")
 
-func must[T any](b T, err error) T {
-	if err != nil {
-		panic(err)
+	c.Args = os.Args[1:]
+	c.Commands = map[string]cli.CommandFactory{
+		"encrypt": func() (cli.Command, error) {
+			return cmd.NewEncryptCmd(NewCipher(*key)), nil
+		},
 	}
-	return b
 }
