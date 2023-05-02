@@ -1,14 +1,14 @@
-package just_encrypt_test
+package zypher_test
 
 import (
 	"testing"
 
-	"github.com/vtno/just_encrypt"
+	"github.com/vtno/zypher"
 )
 
 func TestCipher_Encrypt(t *testing.T) {
 	type test struct {
-		ci          *just_encrypt.Cipher
+		ci          *zypher.Cipher
 		name        string
 		input       []byte
 		expectError bool
@@ -16,25 +16,25 @@ func TestCipher_Encrypt(t *testing.T) {
 
 	tests := []test{
 		{
-			ci:          just_encrypt.NewCipher("1234"),
+			ci:          zypher.NewCipher("1234"),
 			name:        "errors when key size is not 16, 24, 32",
 			input:       []byte("somelongkey"),
 			expectError: true,
 		},
 		{
-			ci:          just_encrypt.NewCipher("1234567890123456"),
+			ci:          zypher.NewCipher("1234567890123456"),
 			name:        "encrypt correctly when key size is 16",
 			input:       []byte("somelongkey"),
 			expectError: false,
 		},
 		{
-			ci:          just_encrypt.NewCipher("123456789012345678901234"),
+			ci:          zypher.NewCipher("123456789012345678901234"),
 			name:        "encrypt correctly when key size is 24",
 			input:       []byte("somelongkey"),
 			expectError: false,
 		},
 		{
-			ci:          just_encrypt.NewCipher("12345678901234567890123456789012"),
+			ci:          zypher.NewCipher("12345678901234567890123456789012"),
 			name:        "encrypt correctly when key size is 32",
 			input:       []byte("somelongkey"),
 			expectError: false,
@@ -51,19 +51,19 @@ func TestCipher_Encrypt(t *testing.T) {
 				t.Errorf("expected no error, got %v", err)
 			}
 			if string(test.input) == string(got) {
-				t.Errorf("expected to encrypted to be different than input: %s, %s", test.input, got)
+				t.Errorf("expected encrypted value to be different than the input: %s, %s", test.input, got)
 			}
 		})
 	}
 }
 
 func TestCipher_Decry(t *testing.T) {
-	encryptor := just_encrypt.NewCipher("1234567890123456")
-	decryptor := just_encrypt.NewCipher("1134567890123456")
+	encryptor := zypher.NewCipher("1234567890123456")
+	decryptor := zypher.NewCipher("1134567890123456")
 
 	type test struct {
-		encryptor   *just_encrypt.Cipher
-		decryptor   *just_encrypt.Cipher
+		encryptor   *zypher.Cipher
+		decryptor   *zypher.Cipher
 		name        string
 		input       []byte
 		expectError bool
@@ -101,7 +101,7 @@ func TestCipher_Decry(t *testing.T) {
 					t.Errorf("expected no error, got %v", err)
 				}
 				if string(test.input) != string(got) {
-					t.Errorf("expected decrypted to be equal to input: %s, %s", test.input, got)
+					t.Errorf("expected decrypted value to be equal to the input: %s, %s", test.input, got)
 				}
 			}
 		})

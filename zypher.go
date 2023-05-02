@@ -1,4 +1,4 @@
-package just_encrypt
+package zypher
 
 import (
 	"crypto/aes"
