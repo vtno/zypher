@@ -1,5 +1,5 @@
 build:
-	go build -o build
+	go build -o build cmd/zypher.go
 .PHONY: build
 
 generate:
