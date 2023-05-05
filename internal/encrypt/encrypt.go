@@ -3,8 +3,8 @@ package encrypt
 import (
 	"flag"
 	"fmt"
+	"os"
 
-	"github.com/vtno/zypher"
 	"github.com/vtno/zypher/internal/config"
 )
 
@@ -16,6 +16,8 @@ type Cipher interface {
 type CipherFactory interface {
 	NewCipher(string) Cipher
 }
+
+type FileReader func(string) ([]byte, error)
 
 const (
 	HelpMsg = `Usage: zypher encrypt [options] <input-value>
@@ -32,9 +34,16 @@ type EncryptCmd struct {
 	cfg *config.Config
 	cf  CipherFactory
 	ci  Cipher
+	fr  FileReader
 }
 
-func NewEncryptCmd(cf CipherFactory) *EncryptCmd {
+func WithFileReader(fr FileReader) func(*EncryptCmd) {
+	return func(e *EncryptCmd) {
+		e.fr = fr
+	}
+}
+
+func NewEncryptCmd(cf CipherFactory, opts ...func(*EncryptCmd)) *EncryptCmd {
 	fs := flag.NewFlagSet("encrypt", flag.ContinueOnError)
 	cfg := &config.Config{}
 	fs.StringVar(&cfg.Key, "key", "", "key to encrypt/decrypt")
@@ -44,11 +53,30 @@ func NewEncryptCmd(cf CipherFactory) *EncryptCmd {
 	fs.StringVar(&cfg.InputFile, "file", "", "input file to be encrypted")
 	fs.StringVar(&cfg.InputFile, "f", "", "input file to be encrypted (shorthand)")
 
-	return &EncryptCmd{
+	e := &EncryptCmd{
 		cfg: cfg,
 		fs:  fs,
 		cf:  cf,
+		fr:  os.ReadFile,
 	}
+
+	for _, opt := range opts {
+		opt(e)
+	}
+
+	return e
+}
+
+func (e *EncryptCmd) init(args []string) error {
+	err := e.fs.Parse(args)
+	if err != nil {
+		return fmt.Errorf("error parsing flag from args: %w", err)
+	}
+	if len(e.fs.Args()) > 0 {
+		e.cfg.Input = e.fs.Args()[0]
+	}
+	e.ci = e.cf.NewCipher(e.cfg.Key)
+	return nil
 }
 
 func (e *EncryptCmd) Help() string {
@@ -59,24 +87,33 @@ func (e *EncryptCmd) Synopsis() string {
 	return SynopsisMsg
 }
 
-func (e *EncryptCmd) Init(args []string) error {
-	err := e.fs.Parse(args)
-	if err != nil {
-		return fmt.Errorf("error parsing flag from args: %w", err)
-	}
-	e.ci = zypher.NewCipher(e.cfg.Key)
-	return nil
-}
-
 func (e *EncryptCmd) Run(args []string) int {
-	e.Init(args)
-	if len(e.fs.Args()) == 1 {
-		encrypted, err := e.ci.Encrypt([]byte(e.fs.Args()[0]))
+	if err := e.init(args); err != nil {
+		fmt.Printf("error initializing encrypt cmd: %v", err)
+	}
+
+	var (
+		input []byte
+		err   error
+	)
+
+	if e.cfg.Input != "" {
+		input = []byte(e.cfg.Input)
+	}
+
+	if e.cfg.InputFile != "" {
+		input, err = e.fr(e.cfg.InputFile)
 		if err != nil {
-			fmt.Printf("error encrypting: %v\n", err)
+			fmt.Printf("error reading input file: %v\n", err)
 			return 1
 		}
-		fmt.Printf(string(encrypted))
 	}
+
+	encrypted, err := e.ci.Encrypt(input)
+	if err != nil {
+		fmt.Printf("error encrypting: %v\n", err)
+		return 1
+	}
+	fmt.Println(string(encrypted))
 	return 0
 }
