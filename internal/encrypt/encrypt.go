@@ -34,7 +34,7 @@ type EncryptCmd struct {
 }
 
 type BaseCmd struct {
-	fr FileReader
+	fr  FileReader
 	fs  *flag.FlagSet
 	cfg *config.Config
 	cf  CipherFactory

@@ -35,7 +35,7 @@ func TestEncrypt_Run(t *testing.T) {
 		args            []string
 		expectedErrCode int
 		// envs            []map[string]string
-		initMocks func()encrypt.CipherFactory
+		initMocks func() encrypt.CipherFactory
 	}
 
 	tests := []test{
@@ -73,7 +73,7 @@ func TestEncrypt_Run(t *testing.T) {
 			name:            "fails when no key provided",
 			args:            []string{"sometext"},
 			expectedErrCode: 1,
-			initMocks: func() encrypt.CipherFactory{
+			initMocks: func() encrypt.CipherFactory {
 				mockCipherFactory := encrypt.NewMockCipherFactory(ctrl)
 				mockCipher := encrypt.NewMockCipher(ctrl)
 				mockCipher.EXPECT().Encrypt(gomock.Any()).Times(0)
