@@ -9,3 +9,7 @@ generate:
 test:
 	go test ./...
 .PHONY: test
+
+fmt:
+	go fmt ./...
+.PHONY: fmt
