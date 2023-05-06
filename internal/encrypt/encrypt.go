@@ -30,20 +30,24 @@ available options:
 )
 
 type EncryptCmd struct {
+	base BaseCmd
+}
+
+type BaseCmd struct {
+	fr FileReader
 	fs  *flag.FlagSet
 	cfg *config.Config
 	cf  CipherFactory
 	ci  Cipher
-	fr  FileReader
 }
 
-func WithFileReader(fr FileReader) func(*EncryptCmd) {
-	return func(e *EncryptCmd) {
-		e.fr = fr
+func WithFileReader(fr FileReader) func(*BaseCmd) {
+	return func(c *BaseCmd) {
+		c.fr = fr
 	}
 }
 
-func NewEncryptCmd(cf CipherFactory, opts ...func(*EncryptCmd)) *EncryptCmd {
+func NewEncryptCmd(cf CipherFactory, opts ...func(*BaseCmd)) *EncryptCmd {
 	fs := flag.NewFlagSet("encrypt", flag.ContinueOnError)
 	cfg := &config.Config{}
 	fs.StringVar(&cfg.Key, "key", "", "key to encrypt/decrypt")
@@ -54,28 +58,38 @@ func NewEncryptCmd(cf CipherFactory, opts ...func(*EncryptCmd)) *EncryptCmd {
 	fs.StringVar(&cfg.InputFile, "f", "", "input file to be encrypted (shorthand)")
 
 	e := &EncryptCmd{
-		cfg: cfg,
-		fs:  fs,
-		cf:  cf,
-		fr:  os.ReadFile,
+		base: BaseCmd{
+			cfg: cfg,
+			fs:  fs,
+			cf:  cf,
+			fr:  os.ReadFile,
+		},
 	}
 
 	for _, opt := range opts {
-		opt(e)
+		opt(&e.base)
 	}
 
 	return e
 }
 
-func (e *EncryptCmd) init(args []string) error {
-	err := e.fs.Parse(args)
+func (b *BaseCmd) init(args []string) error {
+	err := b.fs.Parse(args)
 	if err != nil {
 		return fmt.Errorf("error parsing flag from args: %w", err)
 	}
-	if len(e.fs.Args()) > 0 {
-		e.cfg.Input = e.fs.Args()[0]
+	if len(b.fs.Args()) > 0 {
+		b.cfg.Input = b.fs.Args()[0]
 	}
-	e.ci = e.cf.NewCipher(e.cfg.Key)
+	if b.cfg.Key == "" {
+		key, found := os.LookupEnv("ZYPHER_KEY")
+		if !found {
+			return fmt.Errorf("no key provided")
+		}
+		b.cfg.Key = key
+	}
+
+	b.ci = b.cf.NewCipher(b.cfg.Key)
 	return nil
 }
 
@@ -88,8 +102,9 @@ func (e *EncryptCmd) Synopsis() string {
 }
 
 func (e *EncryptCmd) Run(args []string) int {
-	if err := e.init(args); err != nil {
+	if err := e.base.init(args); err != nil {
 		fmt.Printf("error initializing encrypt cmd: %v", err)
+		return 1
 	}
 
 	var (
@@ -97,19 +112,19 @@ func (e *EncryptCmd) Run(args []string) int {
 		err   error
 	)
 
-	if e.cfg.Input != "" {
-		input = []byte(e.cfg.Input)
+	if e.base.cfg.Input != "" {
+		input = []byte(e.base.cfg.Input)
 	}
 
-	if e.cfg.InputFile != "" {
-		input, err = e.fr(e.cfg.InputFile)
+	if e.base.cfg.InputFile != "" {
+		input, err = e.base.fr(e.base.cfg.InputFile)
 		if err != nil {
 			fmt.Printf("error reading input file: %v\n", err)
 			return 1
 		}
 	}
 
-	encrypted, err := e.ci.Encrypt(input)
+	encrypted, err := e.base.ci.Encrypt(input)
 	if err != nil {
 		fmt.Printf("error encrypting: %v\n", err)
 		return 1
