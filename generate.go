@@ -1,3 +1,3 @@
 package zypher
 
-//go:generate mockgen -source=internal/encrypt/encrypt.go -destination=internal/encrypt/encrypt_mock.go -package=encrypt
+//go:generate mockgen -source=internal/crypto/base.go -destination=internal/crypto/mock.go -package=crypto
