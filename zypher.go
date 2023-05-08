@@ -7,7 +7,19 @@ import (
 	"errors"
 	"fmt"
 	"io"
+
+	"github.com/vtno/zypher/internal/crypto"
 )
+
+type CipherFactory struct{}
+
+func NewCipherFactory() *CipherFactory {
+	return &CipherFactory{}
+}
+
+func (cf *CipherFactory) NewCipher(key string) crypto.Cipher {
+	return NewCipher(key)
+}
 
 type Cipher struct {
 	key []byte

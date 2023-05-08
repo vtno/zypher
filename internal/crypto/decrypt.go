@@ -1,8 +1,9 @@
-package encrypt
+package crypto
 
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/vtno/zypher/internal/config"
 )
@@ -35,6 +36,7 @@ func NewDecryptCmd(cf CipherFactory, opts ...func(*BaseCmd)) *DecryptCmd {
 			cfg: cfg,
 			fs:  fs,
 			cf:  cf,
+			fr:  os.ReadFile,
 		},
 	}
 	for _, opt := range opts {

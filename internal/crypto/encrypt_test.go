@@ -1,28 +1,27 @@
-package encrypt_test
+package crypto_test
 
 import (
-	// "os"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/vtno/zypher/internal/encrypt"
-	// "golang.org/x/exp/maps"
+	"github.com/vtno/zypher/internal/crypto"
 )
 
 func TestEncrypt_Help(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	encryptCmd := encrypt.NewEncryptCmd(encrypt.NewMockCipherFactory(ctrl))
+	encryptCmd := crypto.NewEncryptCmd(crypto.NewMockCipherFactory(ctrl))
 	msg := encryptCmd.Help()
-	if msg != encrypt.HelpMsg {
+	if msg != crypto.HelpMsg {
 		t.Errorf("Expected correct help message, got %s", msg)
 	}
 }
 
 func TestEncrypt_Synopsis(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	encryptCmd := encrypt.NewEncryptCmd(encrypt.NewMockCipherFactory(ctrl))
+	encryptCmd := crypto.NewEncryptCmd(crypto.NewMockCipherFactory(ctrl))
 	msg := encryptCmd.Synopsis()
-	if msg != encrypt.SynopsisMsg {
+	if msg != crypto.SynopsisMsg {
 		t.Errorf("Expected correct synopsis message, got %s", msg)
 	}
 }
@@ -34,8 +33,8 @@ func TestEncrypt_Run(t *testing.T) {
 		name            string
 		args            []string
 		expectedErrCode int
-		// envs            []map[string]string
-		initMocks func() encrypt.CipherFactory
+		envs            map[string]string
+		initMocks       func() crypto.CipherFactory
 	}
 
 	tests := []test{
@@ -43,9 +42,9 @@ func TestEncrypt_Run(t *testing.T) {
 			name:            "run successfully with input from args",
 			args:            []string{"-k", "key", "sometext"},
 			expectedErrCode: 0,
-			initMocks: func() encrypt.CipherFactory {
-				mockCipherFactory := encrypt.NewMockCipherFactory(ctrl)
-				mockCipher := encrypt.NewMockCipher(ctrl)
+			initMocks: func() crypto.CipherFactory {
+				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
+				mockCipher := crypto.NewMockCipher(ctrl)
 				mockCipher.EXPECT().Encrypt([]byte("sometext")).Times(1)
 				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(1)
 				return mockCipherFactory
@@ -55,27 +54,34 @@ func TestEncrypt_Run(t *testing.T) {
 			name:            "run successfully with input from file",
 			args:            []string{"-k", "key", "-f", "input.txt", "-o", "input.enc"},
 			expectedErrCode: 0,
-			initMocks: func() encrypt.CipherFactory {
-				mockCipherFactory := encrypt.NewMockCipherFactory(ctrl)
-				mockCipher := encrypt.NewMockCipher(ctrl)
+			initMocks: func() crypto.CipherFactory {
+				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
+				mockCipher := crypto.NewMockCipher(ctrl)
 				mockCipher.EXPECT().Encrypt([]byte("content")).Times(1)
 				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(1)
 				return mockCipherFactory
 			},
 		},
-		// {
-		// 	name:            "run successfully with key from ZYPHER_KEY env",
-		// 	args:            []string{"sometext"},
-		// 	envs:            []map[string]string{{"ZYPHER_KEY": "key"}},
-		// 	expectedErrCode: 0,
-		// },
+		{
+			name:            "run successfully with key from ZYPHER_KEY env",
+			args:            []string{"sometext"},
+			envs:            map[string]string{"ZYPHER_KEY": "key"},
+			expectedErrCode: 0,
+			initMocks: func() crypto.CipherFactory {
+				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
+				mockCipher := crypto.NewMockCipher(ctrl)
+				mockCipher.EXPECT().Encrypt([]byte("sometext")).Times(1)
+				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(1)
+				return mockCipherFactory
+			},
+		},
 		{
 			name:            "fails when no key provided",
 			args:            []string{"sometext"},
 			expectedErrCode: 1,
-			initMocks: func() encrypt.CipherFactory {
-				mockCipherFactory := encrypt.NewMockCipherFactory(ctrl)
-				mockCipher := encrypt.NewMockCipher(ctrl)
+			initMocks: func() crypto.CipherFactory {
+				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
+				mockCipher := crypto.NewMockCipher(ctrl)
 				mockCipher.EXPECT().Encrypt(gomock.Any()).Times(0)
 				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(0)
 				return mockCipherFactory
@@ -85,16 +91,14 @@ func TestEncrypt_Run(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// os.Clearenv()
-			// for _, env := range maps.Keys(tt.envs) {
-			// 	for _, k := range maps.Keys(env) {
-			// 		os.Setenv(k, env[k])
-			// 	}
-			// }
+			os.Clearenv()
+			for k, v := range tt.envs {
+				os.Setenv(k, v)
+			}
 			mockCipherFactory := tt.initMocks()
-			encryptCmd := encrypt.NewEncryptCmd(
+			encryptCmd := crypto.NewEncryptCmd(
 				mockCipherFactory,
-				encrypt.WithFileReader(func(s string) ([]byte, error) {
+				crypto.WithFileReader(func(s string) ([]byte, error) {
 					return []byte("content"), nil
 				}),
 			)

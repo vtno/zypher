@@ -5,19 +5,7 @@ import (
 
 	"github.com/mitchellh/cli"
 	"github.com/vtno/zypher"
-	"github.com/vtno/zypher/internal/encrypt"
-)
-
-type CipherFactory struct{}
-
-func (cf *CipherFactory) NewCipher(key string) encrypt.Cipher {
-	return zypher.NewCipher(key)
-}
-
-var (
-	key       string
-	outFile   string
-	inputFile string
+	"github.com/vtno/zypher/internal/crypto"
 )
 
 func main() {
@@ -26,7 +14,10 @@ func main() {
 	c.HelpFunc = cli.BasicHelpFunc("zypher")
 	c.Commands = map[string]cli.CommandFactory{
 		"encrypt": func() (cli.Command, error) {
-			return encrypt.NewEncryptCmd(&CipherFactory{}), nil
+			return crypto.NewEncryptCmd(zypher.NewCipherFactory()), nil
+		},
+		"decrypt": func() (cli.Command, error) {
+			return crypto.NewDecryptCmd(zypher.NewCipherFactory()), nil
 		},
 	}
 	c.Run()

@@ -57,7 +57,7 @@ func TestCipher_Encrypt(t *testing.T) {
 	}
 }
 
-func TestCipher_Decry(t *testing.T) {
+func TestCipher_Decrypt(t *testing.T) {
 	encryptor := zypher.NewCipher("1234567890123456")
 	decryptor := zypher.NewCipher("1134567890123456")
 
