@@ -2,7 +2,7 @@ build:
 	go build -o build cmd/zypher.go
 .PHONY: build
 
-generate:
+gen:
 	go generate ./...
 .PHONY: generate
 
