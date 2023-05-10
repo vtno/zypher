@@ -1,11 +1,12 @@
 package crypto
 
 import (
+	"encoding/base64"
 	"flag"
 	"fmt"
-	"os"
 
 	"github.com/vtno/zypher/internal/config"
+	"github.com/vtno/zypher/internal/file"
 )
 
 const (
@@ -37,7 +38,7 @@ func NewEncryptCmd(cf CipherFactory, opts ...func(*BaseCmd)) *EncryptCmd {
 			cfg: cfg,
 			fs:  fs,
 			cf:  cf,
-			fr:  os.ReadFile,
+			frw: file.NewFileReaderWriter(),
 		},
 	}
 
@@ -72,7 +73,7 @@ func (e *EncryptCmd) Run(args []string) int {
 	}
 
 	if e.base.cfg.InputFile != "" {
-		input, err = e.base.fr(e.base.cfg.InputFile)
+		input, err = e.base.frw.ReadFile(e.base.cfg.InputFile)
 		if err != nil {
 			fmt.Printf("error reading input file: %v\n", err)
 			return 1
@@ -84,6 +85,17 @@ func (e *EncryptCmd) Run(args []string) int {
 		fmt.Printf("error encrypting: %v\n", err)
 		return 1
 	}
-	fmt.Println(string(encrypted))
+
+	base64Encrypted := base64.StdEncoding.EncodeToString(encrypted)
+	if e.base.cfg.OutFile != "" {
+		if err := e.base.frw.WriteFile(e.base.cfg.OutFile, []byte(base64Encrypted), 0600); err != nil {
+			fmt.Printf("error writing to output file: %v\n", err)
+			return 1
+		}
+		return 0
+	} else {
+		fmt.Println(base64Encrypted)
+	}
+
 	return 0
 }

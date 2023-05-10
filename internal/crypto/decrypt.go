@@ -1,11 +1,12 @@
 package crypto
 
 import (
+	"encoding/base64"
 	"flag"
 	"fmt"
-	"os"
 
 	"github.com/vtno/zypher/internal/config"
+	"github.com/vtno/zypher/internal/file"
 )
 
 type DecryptCmd struct {
@@ -36,7 +37,7 @@ func NewDecryptCmd(cf CipherFactory, opts ...func(*BaseCmd)) *DecryptCmd {
 			cfg: cfg,
 			fs:  fs,
 			cf:  cf,
-			fr:  os.ReadFile,
+			frw: file.NewFileReaderWriter(),
 		},
 	}
 	for _, opt := range opts {
@@ -60,27 +61,41 @@ func (d *DecryptCmd) Run(args []string) int {
 	}
 
 	var (
-		input []byte
+		input string
 		err   error
 	)
 	if d.base.cfg.Input != "" {
-		input = []byte(d.base.cfg.Input)
+		input = d.base.cfg.Input
 	}
 
 	if d.base.cfg.InputFile != "" {
-		input, err = d.base.fr(d.base.cfg.InputFile)
+		fileInput, err := d.base.frw.ReadFile(d.base.cfg.InputFile)
 		if err != nil {
 			fmt.Printf("error reading input file: %v\n", err)
 			return 1
 		}
+		input = string(fileInput)
 	}
 
-	decrypted, err := d.base.ci.Decrypt(input)
+	decodedInput, err := base64.StdEncoding.DecodeString(input)
+	if err != nil {
+		fmt.Printf("error decoding input: %v\n", err)
+		return 1
+	}
+	decrypted, err := d.base.ci.Decrypt(decodedInput)
 	if err != nil {
 		fmt.Printf("error decrypting: %v\n", err)
 		return 1
 	}
 
-	fmt.Println(string(decrypted))
+	if d.base.cfg.OutFile != "" {
+		if err := d.base.frw.WriteFile(d.base.cfg.OutFile, decrypted, 0600); err != nil {
+			fmt.Printf("error writing to file: %v\n", err)
+			return 1
+		}
+	} else {
+		fmt.Println(string(decrypted))
+	}
+
 	return 0
 }

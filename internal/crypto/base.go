@@ -17,19 +17,22 @@ type CipherFactory interface {
 	NewCipher(string) Cipher
 }
 
-type FileReader func(string) ([]byte, error)
+type FileReaderWriter interface {
+	ReadFile(string) ([]byte, error)
+	WriteFile(string, []byte, os.FileMode) error
+}
 
 type BaseCmd struct {
-	fr  FileReader
+	frw FileReaderWriter
 	fs  *flag.FlagSet
 	cfg *config.Config
 	cf  CipherFactory
 	ci  Cipher
 }
 
-func WithFileReader(fr FileReader) func(*BaseCmd) {
+func WithFileReaderWriter(frw FileReaderWriter) func(*BaseCmd) {
 	return func(c *BaseCmd) {
-		c.fr = fr
+		c.frw = frw
 	}
 }
 
