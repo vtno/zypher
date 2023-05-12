@@ -17,3 +17,7 @@ fmt:
 xbuild:
 	gox -os="linux darwin windows" -output="build/{{.Dir}}_{{.OS}}_{{.Arch}}" github.com/vtno/zypher/cmd/zypher
 .PHONY: xbuild
+
+lint:
+	golangci-lint run
+.PHONY: lint

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/mitchellh/cli"
@@ -20,5 +21,8 @@ func main() {
 			return crypto.NewDecryptCmd(zypher.NewCipherFactory()), nil
 		},
 	}
-	c.Run()
+	_, err := c.Run()
+	if err != nil {
+		log.Fatalf("error running zypher command: %s", err)
+	}
 }

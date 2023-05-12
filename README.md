@@ -3,6 +3,7 @@
 A dead simple AES encryption / decryption CLI and Go library.
 
 It works perfectly when you just want to encrypt `.env` file and check it into the codebase like [Rails](https://edgeguides.rubyonrails.org/security.html#environmental-security) does.
+
 ## Installation
 
 - requires go 1.20.4
