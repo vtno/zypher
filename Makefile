@@ -13,3 +13,7 @@ test:
 fmt:
 	go fmt ./...
 .PHONY: fmt
+
+xbuild:
+	gox -os="linux darwin windows" -output="build/{{.Dir}}_{{.OS}}_{{.Arch}}" github.com/vtno/zypher/cmd/zypher
+.PHONY: xbuild
