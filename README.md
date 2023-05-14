@@ -41,4 +41,9 @@ zypher decrypt -k <AES-KEY> -f input.txt.enc -o input.txt
 # this works too!
 zypher encrypt -k <AES-KEY> -f input.txt > input.txt.enc
 zypher decrypt -k <AES-KEY> -f input.txt.enc > input.txt
+
+# the key can also be set as ZYPHER_KEY env
+export ZYPHER_KEY=<AES-KEY>
+zypher encrypt -f input.txt > input.txt.enc
+zypher decrypt -f input.txt.enc > input.txt
 ```
