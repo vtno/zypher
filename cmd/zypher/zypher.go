@@ -9,8 +9,10 @@ import (
 	"github.com/vtno/zypher/internal/crypto"
 )
 
+const version = "0.1.0"
+
 func main() {
-	c := cli.NewCLI("zypher", "0.0.1")
+	c := cli.NewCLI("zypher", version)
 	c.Args = os.Args[1:]
 	c.HelpFunc = cli.BasicHelpFunc("zypher")
 	c.Commands = map[string]cli.CommandFactory{

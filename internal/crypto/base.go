@@ -36,18 +36,31 @@ func WithFileReaderWriter(frw FileReaderWriter) func(*BaseCmd) {
 	}
 }
 
+// init parse the flags and set the config struct
+// it also read the key from the zypher.key file or env variable
+// key file location is overridden if the config is parsed from flags
 func (b *BaseCmd) init(args []string) error {
 	err := b.fs.Parse(args)
 	if err != nil {
 		return fmt.Errorf("error parsing flag from args: %w", err)
 	}
+
 	if len(b.fs.Args()) > 0 {
 		b.cfg.Input = b.fs.Args()[0]
 	}
+
+	if b.cfg.Key == "" {
+		key, _ := b.frw.ReadFile(b.cfg.KeyFile)
+		fmt.Println("key: ", key)
+		if key != nil {
+			b.cfg.Key = string(key)
+		}
+	}
+
 	if b.cfg.Key == "" {
 		key, found := os.LookupEnv("ZYPHER_KEY")
 		if !found {
-			return fmt.Errorf("no key provided")
+			return fmt.Errorf("no key provided: ")
 		}
 		b.cfg.Key = key
 	}

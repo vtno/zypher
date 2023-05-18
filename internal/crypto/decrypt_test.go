@@ -80,6 +80,37 @@ func TestDecrypt_Run(t *testing.T) {
 				mockCipher.EXPECT().Decrypt([]byte("encryptedcontent")).Times(1)
 				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(1)
 				mockFileReaderWriter := crypto.NewMockFileReaderWriter(ctrl)
+				mockFileReaderWriter.EXPECT().ReadFile("zypher.key").Return(nil, errors.New("file not exist")).Times(1)
+				mockFileReaderWriter.EXPECT().ReadFile("input.enc").Return([]byte(base64Content), nil).Times(1)
+				return mockCipherFactory, mockFileReaderWriter
+			},
+		},
+		{
+			name:            "run successfully with key from zypher.key file",
+			args:            []string{"-f", "input.enc"},
+			expectedErrCode: 0,
+			initMocks: func() (crypto.CipherFactory, crypto.FileReaderWriter) {
+				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
+				mockCipher := crypto.NewMockCipher(ctrl)
+				mockCipher.EXPECT().Decrypt([]byte("encryptedcontent")).Times(1)
+				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(1)
+				mockFileReaderWriter := crypto.NewMockFileReaderWriter(ctrl)
+				mockFileReaderWriter.EXPECT().ReadFile("zypher.key").Return([]byte("key"), nil).Times(1)
+				mockFileReaderWriter.EXPECT().ReadFile("input.enc").Return([]byte(base64Content), nil).Times(1)
+				return mockCipherFactory, mockFileReaderWriter
+			},
+		},
+		{
+			name:            "run successfully with key from overridden another.key file",
+			args:            []string{"-f", "input.enc", "-kf", "another.key"},
+			expectedErrCode: 0,
+			initMocks: func() (crypto.CipherFactory, crypto.FileReaderWriter) {
+				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
+				mockCipher := crypto.NewMockCipher(ctrl)
+				mockCipher.EXPECT().Decrypt([]byte("encryptedcontent")).Times(1)
+				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(1)
+				mockFileReaderWriter := crypto.NewMockFileReaderWriter(ctrl)
+				mockFileReaderWriter.EXPECT().ReadFile("another.key").Return([]byte("anotherkey"), nil).Times(1)
 				mockFileReaderWriter.EXPECT().ReadFile("input.enc").Return([]byte(base64Content), nil).Times(1)
 				return mockCipherFactory, mockFileReaderWriter
 			},
@@ -92,8 +123,10 @@ func TestDecrypt_Run(t *testing.T) {
 				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
 				mockCipher := crypto.NewMockCipher(ctrl)
 				mockCipher.EXPECT().Decrypt(gomock.Any()).Times(0)
+				mockFileReaderWriter := crypto.NewMockFileReaderWriter(ctrl)
+				mockFileReaderWriter.EXPECT().ReadFile("zypher.key").Return(nil, errors.New("file not exist")).Times(1)
 				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Times(0)
-				return mockCipherFactory, nil
+				return mockCipherFactory, mockFileReaderWriter
 			},
 		},
 		{

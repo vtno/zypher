@@ -1,6 +1,7 @@
 package crypto_test
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"testing"
@@ -67,6 +68,42 @@ func TestEncrypt_Run(t *testing.T) {
 			},
 		},
 		{
+			name:            "run successfully with key from zypher.key file",
+			args:            []string{"-f", "input.txt", "-o", "input.enc"},
+			expectedErrCode: 0,
+			initMocks: func() (crypto.CipherFactory, crypto.FileReaderWriter) {
+				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
+				mockCipher := crypto.NewMockCipher(ctrl)
+				mockCipher.EXPECT().Encrypt([]byte("content")).Times(1)
+				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(1)
+				mockFileReaderWriter := crypto.NewMockFileReaderWriter(ctrl)
+				gomock.InOrder(
+					mockFileReaderWriter.EXPECT().ReadFile("zypher.key").Return([]byte("key"), nil).Times(1),
+					mockFileReaderWriter.EXPECT().ReadFile("input.txt").Return([]byte("content"), nil).Times(1),
+				)
+				mockFileReaderWriter.EXPECT().WriteFile("input.enc", gomock.Any(), fs.FileMode(0600)).Times(1)
+				return mockCipherFactory, mockFileReaderWriter
+			},
+		},
+		{
+			name:            "run successfully with key from overridden another.key file",
+			args:            []string{"-f", "input.txt", "-o", "input.enc", "-kf", "another.key"},
+			expectedErrCode: 0,
+			initMocks: func() (crypto.CipherFactory, crypto.FileReaderWriter) {
+				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
+				mockCipher := crypto.NewMockCipher(ctrl)
+				mockCipher.EXPECT().Encrypt([]byte("content")).Times(1)
+				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(1)
+				mockFileReaderWriter := crypto.NewMockFileReaderWriter(ctrl)
+				gomock.InOrder(
+					mockFileReaderWriter.EXPECT().ReadFile("another.key").Return([]byte("anotherkey"), nil).Times(1),
+					mockFileReaderWriter.EXPECT().ReadFile("input.txt").Return([]byte("content"), nil).Times(1),
+				)
+				mockFileReaderWriter.EXPECT().WriteFile("input.enc", gomock.Any(), fs.FileMode(0600)).Times(1)
+				return mockCipherFactory, mockFileReaderWriter
+			},
+		},
+		{
 			name:            "run successfully with key from ZYPHER_KEY env",
 			args:            []string{"sometext"},
 			envs:            map[string]string{"ZYPHER_KEY": "key"},
@@ -75,8 +112,10 @@ func TestEncrypt_Run(t *testing.T) {
 				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
 				mockCipher := crypto.NewMockCipher(ctrl)
 				mockCipher.EXPECT().Encrypt([]byte("sometext")).Times(1)
+				mockFileReaderWriter := crypto.NewMockFileReaderWriter(ctrl)
+				mockFileReaderWriter.EXPECT().ReadFile("zypher.key").Return(nil, errors.New("file not exist")).Times(1)
 				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(1)
-				return mockCipherFactory, nil
+				return mockCipherFactory, mockFileReaderWriter
 			},
 		},
 		{
@@ -87,8 +126,24 @@ func TestEncrypt_Run(t *testing.T) {
 				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
 				mockCipher := crypto.NewMockCipher(ctrl)
 				mockCipher.EXPECT().Encrypt(gomock.Any()).Times(0)
+				mockFileReaderWriter := crypto.NewMockFileReaderWriter(ctrl)
+				mockFileReaderWriter.EXPECT().ReadFile("zypher.key").Return(nil, errors.New("file not exist")).Times(1)
 				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(0)
-				return mockCipherFactory, nil
+				return mockCipherFactory, mockFileReaderWriter
+			},
+		},
+		{
+			name:            "fails when file not exist",
+			args:            []string{"-k", "key", "-f", "not-exist.txt"},
+			expectedErrCode: 1,
+			initMocks: func() (crypto.CipherFactory, crypto.FileReaderWriter) {
+				mockCipherFactory := crypto.NewMockCipherFactory(ctrl)
+				mockCipher := crypto.NewMockCipher(ctrl)
+				mockCipher.EXPECT().Decrypt(gomock.Any()).Times(0)
+				mockCipherFactory.EXPECT().NewCipher(gomock.Any()).Return(mockCipher).Times(1)
+				mockFileReaderWriter := crypto.NewMockFileReaderWriter(ctrl)
+				mockFileReaderWriter.EXPECT().ReadFile("not-exist.txt").Return(nil, errors.New("file not exist")).Times(1)
+				return mockCipherFactory, mockFileReaderWriter
 			},
 		},
 	}

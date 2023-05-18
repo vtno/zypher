@@ -28,6 +28,8 @@ func NewEncryptCmd(cf CipherFactory, opts ...func(*BaseCmd)) *EncryptCmd {
 	cfg := &config.Config{}
 	fs.StringVar(&cfg.Key, "key", "", "key to encrypt/decrypt")
 	fs.StringVar(&cfg.Key, "k", "", "key to encrypt/decrypt (shorthand)")
+	fs.StringVar(&cfg.KeyFile, "key-file", "zypher.key", "file path for reading key to be used for encryption/decryption")
+	fs.StringVar(&cfg.KeyFile, "kf", "zypher.key", "file path for reading key to be used for encryption/decryption (shorthand)")
 	fs.StringVar(&cfg.OutFile, "out", "", "output file to be created")
 	fs.StringVar(&cfg.OutFile, "o", "", "output file to be created (shorthand)")
 	fs.StringVar(&cfg.InputFile, "file", "", "input file to be encrypted")
