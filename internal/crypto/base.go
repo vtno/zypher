@@ -51,7 +51,6 @@ func (b *BaseCmd) init(args []string) error {
 
 	if b.cfg.Key == "" {
 		key, _ := b.frw.ReadFile(b.cfg.KeyFile)
-		fmt.Println("key: ", key)
 		if key != nil {
 			b.cfg.Key = string(key)
 		}
