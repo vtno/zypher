@@ -18,13 +18,14 @@ There are only 2 subcommands `encrypt` and `decrypt`, both have similar options.
 
 ```shell
 # available options:
-# -k, --key    A key to be used on encryption / decryption. The length should be:
-#                16 bytes for AES-128
-#                24 bytes for AES-192
-#                32 bytes for AES-256
+# -k, --key       A key to be used on encryption / decryption. The length should be:
+#                  16 bytes for AES-128
+#                  24 bytes for AES-192
+#                  32 bytes for AES-256
 #
-# -f, --file  A path to file to be encrypted / decrypted
-# -o, --out   A path to output file
+# -f, --file      A path to file to be encrypted / decrypted
+# -o, --out       A path to output file
+# -kf, --key-file A path to key file. Default: zypher.key
 
 # encrypting/decrypting from arg to stdout
 zypher encrypt -k <AES-KEY> input-to-be-encrypt
@@ -46,4 +47,9 @@ zypher decrypt -k <AES-KEY> -f input.txt.enc > input.txt
 export ZYPHER_KEY=<AES-KEY>
 zypher encrypt -f input.txt > input.txt.enc
 zypher decrypt -f input.txt.enc > input.txt
+
+# the key is automatically lookup on zypher.key file
+# and could be overridden with --key-file flag
+zypher encrypt -kf your-own.key -f input.txt -o input.txt.enc
+zypher decrypt -kf /some/path/your-own.key -f input.txt.enc -o input.txt
 ```

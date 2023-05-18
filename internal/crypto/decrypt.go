@@ -16,9 +16,10 @@ type DecryptCmd struct {
 const (
 	DecryptHelpMsg = `Usage: zypher decrypt [options] <input-value>
 available options:
-	-k, --key=<key>			key for encryption/decryption
-	-f, --file=<path-to-file>	input file to be encrypted
-	-o, --out=<path-to-file>	output file to be created
+	-k, --key=<key>				key to encrypt/decrypt
+	-f, --file=<path-to-file>		input file to be encrypted
+	-o, --out=<path-to-file>		output file to be created
+	-kf, --key-file=<path-to-file>  	A path to key file. Default: zypher.key
 `
 	DecryptSynopsis = "decrypts input value or file with the provided key and prints the decrypted value to stdout or a file"
 )

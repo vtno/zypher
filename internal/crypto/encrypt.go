@@ -12,9 +12,10 @@ import (
 const (
 	HelpMsg = `Usage: zypher encrypt [options] <input-value>
 available options:
-	-k, --key=<key>			key to encrypt/decrypt
-	-f, --file=<path-to-file>	input file to be encrypted
-	-o, --out=<path-to-file>	output file to be created
+	-k, --key=<key>				key to encrypt/decrypt
+	-f, --file=<path-to-file>		input file to be encrypted
+	-o, --out=<path-to-file>		output file to be created
+	-kf, --key-file=<path-to-file>  	A path to key file. Default: zypher.key
 `
 	SynopsisMsg = "encrypts input value or file with the provided key and prints the encrypted value to stdout or create a file"
 )
