@@ -14,7 +14,7 @@ go install github.com/vtno/zypher/cmd/zypher@latest
 
 ## Usage
 
-There are only 2 subcommands `encrypt` and `decrypt`, both have similar options.
+There are 3 subcommands. `encrypt`, `decrypt` which have similar options and `keygen` which is a utility command to generate a `zypher.key` file.
 
 ```shell
 # available options:
@@ -52,4 +52,7 @@ zypher decrypt -f input.txt.enc > input.txt
 # and could be overridden with --key-file flag
 zypher encrypt -kf your-own.key -f input.txt -o input.txt.enc
 zypher decrypt -kf /some/path/your-own.key -f input.txt.enc -o input.txt
+
+# generate zypher.key easily with keygen command
+zypher keygen
 ```
