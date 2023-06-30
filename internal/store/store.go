@@ -11,4 +11,7 @@ type Store interface {
 	// List returns all the keys in the store.
 	// It optionally takes a prefix to filter the keys by.
 	List(prefix *string) ([]string, error)
+
+	// Close closes the underlying store.
+	Close() error
 }
