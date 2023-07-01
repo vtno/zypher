@@ -1,0 +1,17 @@
+name: Build and Test
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/checkout-and-setupgo
+      - name: Build
+        run: make build
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/checkout-and-setupgo
+      - name: Test
+        run: make test

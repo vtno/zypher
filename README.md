@@ -9,7 +9,7 @@ It works perfectly when you just want to encrypt `.env` file and check it into t
 - requires go 1.20.4
 
 ```shell
-go install github.com/vtno/zypher/cmd/zypher@latest
+go install github.com/vtno/zypher/cmd/zypher@0.2.0
 ```
 
 ## Usage
