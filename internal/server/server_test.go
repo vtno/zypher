@@ -57,7 +57,7 @@ func TestServer_up(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	s, err := server.NewServer()
+	s, err := server.NewServer(server.WithPort(8081))
 	if err != nil {
 		t.Errorf("error creating server: %v", err)
 	}
@@ -66,7 +66,7 @@ func TestServer_up(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			url := fmt.Sprintf("http://localhost:8080%s", tt.path)
+			url := fmt.Sprintf("http://localhost:8081%s", tt.path)
 			client := &http.Client{}
 			req, err := http.NewRequest(tt.method, url, nil)
 			if err != nil {

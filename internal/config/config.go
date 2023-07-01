@@ -7,3 +7,7 @@ type Config struct {
 	Input     string
 	InputFile string
 }
+
+type ServerConfig struct {
+	Port int
+}

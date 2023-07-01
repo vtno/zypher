@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/vtno/zypher/internal/server"
 	"log"
 	"os"
 
@@ -25,6 +26,9 @@ func main() {
 		},
 		"keygen": func() (cli.Command, error) {
 			return keygen.NewKeyGenCmd(), nil
+		},
+		"server": func() (cli.Command, error) {
+			return server.NewServerCmd(), nil
 		},
 	}
 	_, err := c.Run()

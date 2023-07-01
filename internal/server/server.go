@@ -11,14 +11,22 @@ import (
 
 // Server is a struct that represents a server
 type Server struct {
-	srv   http.Server
+	srv   *http.Server
 	store store.Store
+}
+
+type ServerOption func(*Server)
+
+func WithPort(port int) ServerOption {
+	return func(s *Server) {
+		s.srv.Addr = fmt.Sprintf(":%d", port)
+	}
 }
 
 const defaultDbPath = "zypher.db"
 
 // NewServer returns a new Server
-func NewServer() (*Server, error) {
+func NewServer(opts ...ServerOption) (*Server, error) {
 	mux := http.NewServeMux()
 	bbStore, err := store.NewBBoltStore(defaultDbPath)
 	if err != nil {
@@ -44,15 +52,21 @@ func NewServer() (*Server, error) {
 		}
 	})
 
-	srv := http.Server{
+	httpSrv := http.Server{
 		Addr:    ":8080",
 		Handler: mux,
 	}
 
-	return &Server{
-		srv:   srv,
+	srv := &Server{
+		srv:   &httpSrv,
 		store: bbStore,
-	}, nil
+	}
+
+	for _, opt := range opts {
+		opt(srv)
+	}
+
+	return srv, nil
 }
 
 // Start starts the server
