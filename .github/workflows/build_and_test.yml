@@ -6,12 +6,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/checkout-and-setupgo
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+
       - name: Build
         run: make build
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/checkout-and-setupgo
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+
       - name: Test
         run: make test
