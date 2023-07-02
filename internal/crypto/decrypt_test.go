@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	gomock "github.com/golang/mock/gomock"
 	"github.com/vtno/zypher/internal/crypto"
+	"go.uber.org/mock/gomock"
 )
 
 func TestDecrypt_Help(t *testing.T) {
