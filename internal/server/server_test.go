@@ -13,6 +13,7 @@ import (
 	"github.com/vtno/zypher/internal/server"
 	"github.com/vtno/zypher/internal/server/handlers"
 	"github.com/vtno/zypher/internal/store"
+	"go.uber.org/mock/gomock"
 )
 
 type test struct {
@@ -23,6 +24,11 @@ type test struct {
 }
 
 func TestServer_up(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mAuthGuard := server.NewMockAuthGuard(ctrl)
+	mStore := store.NewMockStore(ctrl)
+	mStore.EXPECT().Close().Times(1)
+
 	tests := []test{
 		{
 			name:           "/up should return 200 on GET",
@@ -57,7 +63,7 @@ func TestServer_up(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	s, err := server.NewServer(server.WithPort(8081))
+	s, err := server.NewServer(mStore, mAuthGuard, server.WithPort(8081))
 	if err != nil {
 		t.Errorf("error creating server: %v", err)
 	}
@@ -85,7 +91,9 @@ func TestServer_up(t *testing.T) {
 
 func TestServer_key(t *testing.T) {
 	ctx := context.Background()
-
+	ctrl := gomock.NewController(t)
+	mAuthGuard := server.NewMockAuthGuard(ctrl)
+	mAuthGuard.EXPECT().Guard(gomock.Any()).Return(true).AnyTimes()
 	// create a key to test with
 	store, err := store.NewBBoltStore("zypher.db")
 	if err != nil {
@@ -95,12 +103,8 @@ func TestServer_key(t *testing.T) {
 	if err != nil {
 		t.Errorf("error setting value: %v", err)
 	}
-	err = store.Close()
-	if err != nil {
-		t.Errorf("error closing store: %v", err)
-	}
 
-	s, err := server.NewServer()
+	s, err := server.NewServer(store, mAuthGuard)
 	if err != nil {
 		t.Errorf("error creating server: %v", err)
 	}

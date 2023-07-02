@@ -8,7 +8,9 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/vtno/zypher/internal/auth"
 	"github.com/vtno/zypher/internal/config"
+	"github.com/vtno/zypher/internal/store"
 )
 
 type ServerCmd struct{}
@@ -39,7 +41,13 @@ func (s *ServerCmd) Run(arg []string) int {
 	fs := flag.NewFlagSet("server", flag.ContinueOnError)
 	fs.IntVar(&cfg.Port, "port", 8080, "a port to start the server")
 
-	srv, err := NewServer()
+	bbStore, err := store.NewBBoltStore(defaultDbPath)
+	if err != nil {
+		fmt.Printf("error creating bbStore: %v", err)
+		return 1
+	}
+
+	srv, err := NewServer(bbStore, auth.NewAuthGuard(bbStore))
 	if err != nil {
 		fmt.Printf("error creating a server %v", err)
 	}

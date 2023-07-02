@@ -9,6 +9,11 @@ import (
 	"github.com/vtno/zypher/internal/store"
 )
 
+// AuthGuard provide a guard call to check if a request is authorized
+type AuthGuard interface {
+	Guard(string) bool
+}
+
 // Server is a struct that represents a server
 type Server struct {
 	srv   *http.Server
@@ -17,6 +22,7 @@ type Server struct {
 
 type ServerOption func(*Server)
 
+// WithPort sets the port of the server
 func WithPort(port int) ServerOption {
 	return func(s *Server) {
 		s.srv.Addr = fmt.Sprintf(":%d", port)
@@ -26,14 +32,15 @@ func WithPort(port int) ServerOption {
 const defaultDbPath = "zypher.db"
 
 // NewServer returns a new Server
-func NewServer(opts ...ServerOption) (*Server, error) {
+func NewServer(bbStore store.Store, auth AuthGuard, opts ...ServerOption) (*Server, error) {
 	mux := http.NewServeMux()
-	bbStore, err := store.NewBBoltStore(defaultDbPath)
-	if err != nil {
-		return nil, fmt.Errorf("error creating bbStore: %v", err)
-	}
 	kh := handlers.NewKeyHandler(bbStore)
 	mux.HandleFunc("/key", func(w http.ResponseWriter, r *http.Request) {
+		if !auth.Guard(r.Header.Get("Authorization")) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
 		switch r.Method {
 		case "GET":
 			kh.Get(w, r)
