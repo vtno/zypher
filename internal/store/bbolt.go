@@ -46,15 +46,7 @@ func (b *BBoltStore) Close() error {
 
 // Get retrieves the value associated with the given key.
 func (b *BBoltStore) Get(key string) (string, error) {
-	var value []byte
-	err := b.DB.View(func(tx *bolt.Tx) error {
-		value = tx.Bucket(defaultBucket).Get([]byte(key))
-		return nil
-	})
-	if err != nil {
-		return "", fmt.Errorf("error getting value from %s bucket: %w", defaultBucket, err)
-	}
-	return string(value), nil
+	return b.GetByBucket(string(defaultBucket), key)
 }
 
 // Set stores the given value and associates it with the given key.
@@ -103,4 +95,17 @@ func (b *BBoltStore) List(prefix *string) ([]string, error) {
 		return nil, fmt.Errorf("error listing keys from %s bucket: %w", defaultBucket, err)
 	}
 	return keys, nil
+}
+
+// GetByBucket retrieves the value associated with the given key from the given bucket.
+func (b *BBoltStore) GetByBucket(bucket, key string) (string, error) {
+	var value []byte
+	err := b.DB.View(func(tx *bolt.Tx) error {
+		value = tx.Bucket([]byte(bucket)).Get([]byte(key))
+		return nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("error getting value from %s bucket: %w", bucket, err)
+	}
+	return string(value), nil
 }
