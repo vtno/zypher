@@ -3,9 +3,9 @@ module github.com/vtno/zypher
 go 1.20
 
 require (
-	github.com/golang/mock v1.6.0
 	github.com/mitchellh/cli v1.1.5
 	go.etcd.io/bbolt v1.3.7
+	go.uber.org/mock v0.1.0
 )
 
 require (

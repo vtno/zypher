@@ -4,6 +4,8 @@ package store
 type Store interface {
 	// Get retrieves the value associated with the given key.
 	Get(key string) (string, error)
+	// GetByBucket retrieves the value associated with the given key from the given bucket.
+	GetByBucket(bucket, key string) (string, error)
 	// Set stores the given value and associates it with the given key.
 	Set(key, value string) error
 	// Delete removes the value associated with the given key.
