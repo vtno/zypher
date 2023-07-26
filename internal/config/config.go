@@ -9,5 +9,6 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Port int
+	Port           int
+	RootPubKeyPath string
 }
