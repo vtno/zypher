@@ -7,7 +7,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/vtno/zypher/internal/store"
+	"github.com/vtno/zypher/internal/server/store"
 )
 
 func MustSet(t *testing.T, err error) {
