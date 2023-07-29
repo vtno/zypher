@@ -2,6 +2,10 @@ build:
 	go build -o build/zypher cmd/zypher/zypher.go
 .PHONY: build
 
+build/signer:
+	go build -o build/signer cmd/signer/signer.go
+.PHONY: build/signer
+
 gen:
 	go generate ./...
 .PHONY: generate
