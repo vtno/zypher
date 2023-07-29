@@ -33,16 +33,16 @@ func (m *MockAuthGuard) EXPECT() *MockAuthGuardMockRecorder {
 	return m.recorder
 }
 
-// Guard mocks base method.
-func (m *MockAuthGuard) Guard(arg0 string) bool {
+// AuthenticateRoot mocks base method.
+func (m *MockAuthGuard) AuthenticateRoot(arg0 string) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Guard", arg0)
+	ret := m.ctrl.Call(m, "AuthenticateRoot", arg0)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-// Guard indicates an expected call of Guard.
-func (mr *MockAuthGuardMockRecorder) Guard(arg0 interface{}) *gomock.Call {
+// AuthenticateRoot indicates an expected call of AuthenticateRoot.
+func (mr *MockAuthGuardMockRecorder) AuthenticateRoot(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guard", reflect.TypeOf((*MockAuthGuard)(nil).Guard), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateRoot", reflect.TypeOf((*MockAuthGuard)(nil).AuthenticateRoot), arg0)
 }

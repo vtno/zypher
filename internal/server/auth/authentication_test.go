@@ -21,7 +21,7 @@ func createKeys(t *testing.T) (*rsa.PrivateKey, *rsa.PublicKey) {
 	return privKey, &privKey.PublicKey
 }
 
-func TestAuth_Authenticate(t *testing.T) {
+func TestAuth_AuthenticateRoot(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mProvider := auth.NewMockPubKeyProvider(ctrl)
 	mStore := store.NewMockStore(ctrl)
@@ -64,7 +64,7 @@ func TestAuth_Authenticate(t *testing.T) {
 			if err != nil {
 				t.Errorf("error initializing auth: %v", err)
 			}
-			result := auth.Authenticate(tt.args[0])
+			result := auth.AuthenticateRoot(tt.args[0])
 			if result != tt.expectedResult {
 				t.Errorf("Expected %v, got %v", tt.expectedResult, result)
 			}

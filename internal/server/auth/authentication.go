@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/vtno/zypher/internal/server/store"
-	"golang.org/x/crypto/ssh"
 )
 
 const defaultAuthBucket = "auth"
@@ -64,9 +63,9 @@ func NewAuth(store store.Store, opts ...AuthOption) (*Auth, error) {
 	return a, nil
 }
 
-// Authenticate extracts the signed payload from the Authorization header
-// then attempts to verify the signature using the public key stored in the store
-func (a *Auth) Authenticate(authHeader string) bool {
+// AuthenticateRoot extracts the signed payload from the Authorization header
+// then attempts to verify the signature using the root public key configured on the server
+func (a *Auth) AuthenticateRoot(authHeader string) bool {
 	if authHeader == "" {
 		return false
 	}
@@ -79,16 +78,4 @@ func (a *Auth) Authenticate(authHeader string) bool {
 		return false
 	}
 	return true
-}
-
-func validate(base64PubKey string) error {
-	pub, err := base64.StdEncoding.DecodeString(base64PubKey)
-	if err != nil {
-		return fmt.Errorf("error decoding public key: %w", err)
-	}
-	_, err = ssh.ParsePublicKey(pub)
-	if err != nil {
-		return fmt.Errorf("error parsing public key: %w", err)
-	}
-	return nil
 }
