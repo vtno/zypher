@@ -12,8 +12,9 @@ import (
 
 	"github.com/vtno/zypher/internal/server"
 	"github.com/vtno/zypher/internal/server/handlers"
-	"github.com/vtno/zypher/internal/store"
+	"github.com/vtno/zypher/internal/server/store"
 	"go.uber.org/mock/gomock"
+	"go.uber.org/zap"
 )
 
 type test struct {
@@ -63,7 +64,7 @@ func TestServer_up(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	s, err := server.NewServer(mStore, mAuthGuard, server.WithPort(8081))
+	s, err := server.NewServer(mStore, mAuthGuard, zap.NewNop(),server.WithPort(8081))
 	if err != nil {
 		t.Errorf("error creating server: %v", err)
 	}
@@ -93,7 +94,7 @@ func TestServer_key(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	mAuthGuard := server.NewMockAuthGuard(ctrl)
-	mAuthGuard.EXPECT().Guard(gomock.Any()).Return(true).AnyTimes()
+	mAuthGuard.EXPECT().AuthenticateRoot(gomock.Any()).Return(true).AnyTimes()
 	// create a key to test with
 	store, err := store.NewBBoltStore("zypher.db")
 	if err != nil {
@@ -104,7 +105,7 @@ func TestServer_key(t *testing.T) {
 		t.Errorf("error setting value: %v", err)
 	}
 
-	s, err := server.NewServer(store, mAuthGuard)
+	s, err := server.NewServer(store, mAuthGuard, zap.NewNop())
 	if err != nil {
 		t.Errorf("error creating server: %v", err)
 	}
@@ -116,7 +117,7 @@ func TestServer_key(t *testing.T) {
 
 	srvUrl := fmt.Sprintf("http://localhost:8080%s", "/key")
 
-	t.Run("/key should return the correct key by name and env on GET", func(t *testing.T) {
+	t.Run("GET /key should return the correct key by name and env on GET", func(t *testing.T) {
 		params := url.Values{}
 		params.Add("name", "twitter")
 		params.Add("env", "prd")
@@ -139,7 +140,23 @@ func TestServer_key(t *testing.T) {
 			t.Errorf("expected key to be %s, got %s", "somevalue", resBody.Key)
 		}
 	})
-	t.Run("/key should return 201 can save a key by name and env on POST", func(t *testing.T) {
+
+	t.Run("GET /key should return 400 if the request invalid", func(t *testing.T) {
+		params := url.Values{}
+		params.Add("name", "twitter")
+		u, _ := url.ParseRequestURI(srvUrl)
+		u.RawQuery = params.Encode()
+
+		resp, err := http.Get(fmt.Sprintf("%v", u))
+		if err != nil {
+			t.Errorf("error sending GET request to /key: %v", err)
+		}
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("expected status code to be %d, got %d", http.StatusBadRequest, resp.StatusCode)
+		}
+	})
+
+	t.Run("POST /key should return 201 can save a key by name and env on POST", func(t *testing.T) {
 		req := handlers.KeyPostRequest{
 			Name: "twitter",
 			Env:  "stg",
@@ -155,7 +172,7 @@ func TestServer_key(t *testing.T) {
 			t.Errorf("error sending POST request to /key: %v", err)
 		}
 		if resp.StatusCode != http.StatusCreated {
-			t.Errorf("expected status code to be %d, got %d", http.StatusOK, resp.StatusCode)
+			t.Errorf("expected status code to be %d, got %d", http.StatusCreated, resp.StatusCode)
 		}
 		params := url.Values{}
 		params.Add("name", "twitter")
@@ -172,5 +189,24 @@ func TestServer_key(t *testing.T) {
 		if kgr.Key != "supersecretkey" {
 			t.Errorf("expected key to be %s, got %s", "supersecretkey", kgr.Key)
 		}
+	})
+
+	t.Run("POST /key should return 400 if request to save key is invalid", func(t *testing.T) {
+		req := handlers.KeyPostRequest{
+			Name: "twitter",
+			Env:  "stg",
+		}
+
+		reqBody, err := json.Marshal(req)
+		if err != nil {
+			t.Errorf("error marshaling request body: %v", err)
+		}
+		resp, err := http.Post(srvUrl, "application/json", bytes.NewBuffer(reqBody))
+		if err != nil {
+			t.Errorf("error sending POST request to /key: %v", err)
+		}
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("expected status code to be %d, got %d", http.StatusBadRequest, resp.StatusCode)
+		}	
 	})
 }

@@ -8,16 +8,19 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/vtno/zypher/internal/auth"
 	"github.com/vtno/zypher/internal/config"
-	"github.com/vtno/zypher/internal/store"
+	"github.com/vtno/zypher/internal/server/auth"
+	"github.com/vtno/zypher/internal/server/provider"
+	"github.com/vtno/zypher/internal/server/store"
+	"go.uber.org/zap"
 )
 
 type ServerCmd struct{}
 
 const (
 	HelpMsg = `Usage: zypher server [options]
-    -p, --port    a port to start the server. default: 8080
+    -p, --port          a port to start the server. default: 8080
+		    --rootKeyPath		a path of root public key. default: ~/.ssh/id_rsa.pub
     `
 	Synopsis = "starts a key server"
 )
@@ -40,6 +43,7 @@ func (s *ServerCmd) Run(arg []string) int {
 
 	fs := flag.NewFlagSet("server", flag.ContinueOnError)
 	fs.IntVar(&cfg.Port, "port", 8080, "a port to start the server")
+	fs.StringVar(&cfg.RootPubKeyPath, "rootKeyPath", "zypher.pub", "a path of root public key")
 
 	bbStore, err := store.NewBBoltStore(defaultDbPath)
 	if err != nil {
@@ -47,7 +51,20 @@ func (s *ServerCmd) Run(arg []string) int {
 		return 1
 	}
 
-	srv, err := NewServer(bbStore, auth.NewAuthGuard(bbStore))
+	pkProvider := provider.NewPubKeyProvider(cfg.RootPubKeyPath)
+	a, err := auth.NewAuth(bbStore, auth.WithPubKeyProvider(pkProvider))
+	if err != nil {
+		fmt.Printf("error creating auth: %v", err)
+		return 1
+	}
+
+	logger, err := zap.NewProduction()
+	if err != nil {
+		fmt.Printf("error creating a logger: %v", err)
+		return 1
+	}
+
+	srv, err := NewServer(bbStore, a, logger)
 	if err != nil {
 		fmt.Printf("error creating a server %v", err)
 	}

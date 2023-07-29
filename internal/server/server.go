@@ -6,18 +6,20 @@ import (
 	"net/http"
 
 	"github.com/vtno/zypher/internal/server/handlers"
-	"github.com/vtno/zypher/internal/store"
+	"github.com/vtno/zypher/internal/server/store"
+	"go.uber.org/zap"
 )
 
 // AuthGuard provide a guard call to check if a request is authorized
 type AuthGuard interface {
-	Guard(string) bool
+	AuthenticateRoot(string) bool
 }
 
 // Server is a struct that represents a server
 type Server struct {
 	srv   *http.Server
 	store store.Store
+	logger *zap.Logger
 }
 
 type ServerOption func(*Server)
@@ -32,20 +34,22 @@ func WithPort(port int) ServerOption {
 const defaultDbPath = "zypher.db"
 
 // NewServer returns a new Server
-func NewServer(bbStore store.Store, auth AuthGuard, opts ...ServerOption) (*Server, error) {
+func NewServer(bbStore store.Store, auth AuthGuard, logger *zap.Logger, opts ...ServerOption) (*Server, error) {
 	mux := http.NewServeMux()
 	kh := handlers.NewKeyHandler(bbStore)
 	mux.HandleFunc("/key", func(w http.ResponseWriter, r *http.Request) {
-		if !auth.Guard(r.Header.Get("Authorization")) {
+		if !auth.AuthenticateRoot(r.Header.Get("Authorization")) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
+		ctxWithLogger := context.WithValue(r.Context(), "logger", logger)
+
 		switch r.Method {
 		case "GET":
-			kh.Get(w, r)
+			kh.Get(w, r.WithContext(ctxWithLogger))
 		case "POST":
-			kh.Post(w, r)
+			kh.Post(w, r.WithContext(ctxWithLogger))
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
