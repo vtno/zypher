@@ -7,7 +7,7 @@ require (
 	github.com/mitchellh/cli v1.1.5
 	go.etcd.io/bbolt v1.3.8
 	go.uber.org/mock v0.3.0
-	go.uber.org/zap v1.26.0
+	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.14.0
 )
 
