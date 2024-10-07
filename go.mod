@@ -5,10 +5,10 @@ go 1.20
 require (
 	github.com/go-playground/validator/v10 v10.15.5
 	github.com/mitchellh/cli v1.1.5
-	go.uber.org/mock v0.4.0
 	go.etcd.io/bbolt v1.3.8
+	go.uber.org/mock v0.4.0
 	go.uber.org/zap v1.26.0
-	golang.org/x/crypto v0.14.0
+	golang.org/x/crypto v0.28.0
 )
 
 require (
@@ -35,7 +35,7 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 )
